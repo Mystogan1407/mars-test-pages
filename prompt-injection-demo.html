@@ -138,6 +138,179 @@
       opacity: 0;
       font-size: 0.9rem;
     }
+
+    /* ============================================================
+       INSPECTOR PANEL
+       ============================================================ */
+    #inspector {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 340px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      color: #e6edf3;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 9999;
+      overflow: hidden;
+      transition: height 0.25s ease;
+    }
+
+    #inspector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #inspector-header .title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #f0883e;
+    }
+
+    #inspector-header .title .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #f0883e;
+      animation: pulse 1.6s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    #inspector-header .badge {
+      background: #da3633;
+      color: #fff;
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    #inspector-header .chevron {
+      color: #8b949e;
+      font-size: 14px;
+      transition: transform 0.2s;
+    }
+
+    #inspector-header.collapsed .chevron { transform: rotate(-90deg); }
+
+    #inspector-body { padding: 10px 0; }
+
+    .payload-item {
+      padding: 8px 14px;
+      border-bottom: 1px solid #21262d;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .payload-item:last-child { border-bottom: none; }
+    .payload-item:hover { background: #1c2128; }
+    .payload-item.active { background: #1c2128; border-left: 3px solid #f0883e; }
+
+    .payload-item .pi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .payload-item .pi-id {
+      font-weight: 700;
+      color: #f0883e;
+      font-size: 11px;
+    }
+
+    .payload-item .pi-type {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .type-zero-font  { background: #3d1f00; color: #f0883e; }
+    .type-white-text { background: #0d2d1a; color: #3fb950; }
+    .type-offscreen  { background: #0d1e3d; color: #58a6ff; }
+    .type-opacity    { background: #2d1540; color: #bc8cff; }
+
+    .payload-item .pi-location {
+      font-size: 10px;
+      color: #8b949e;
+    }
+
+    .payload-item .pi-intent {
+      font-size: 10px;
+      color: #e6edf3;
+      opacity: 0.75;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #inspector-footer {
+      padding: 8px 14px;
+      border-top: 1px solid #30363d;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-inspector {
+      flex: 1;
+      padding: 5px 0;
+      border-radius: 5px;
+      border: 1px solid #30363d;
+      background: #21262d;
+      color: #e6edf3;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn-inspector:hover { background: #30363d; border-color: #8b949e; }
+    .btn-inspector.active { background: #f0883e22; border-color: #f0883e; color: #f0883e; }
+
+    /* Highlight revealed state */
+    .injection-revealed {
+      outline: 2px dashed #f0883e !important;
+      background: #f0883e22 !important;
+      color: #f0883e !important;
+      font-size: 0.8rem !important;
+      opacity: 1 !important;
+      position: static !important;
+      left: auto !important;
+      top: auto !important;
+      display: block !important;
+      padding: 6px 8px !important;
+      border-radius: 4px !important;
+      margin: 4px 0 !important;
+    }
+
+    .injection-focused {
+      outline: 3px solid #f0883e !important;
+      box-shadow: 0 0 0 6px #f0883e33 !important;
+    }
   </style>
 </head>
 <body>
@@ -250,6 +423,126 @@
     This document contains confidential and proprietary information of Acme Corporation.
     Distribution is restricted to authorized personnel only. · Generated 2025-10-01
   </footer>
+
+  <!-- INSPECTOR PANEL -->
+  <div id="inspector">
+    <div id="inspector-header" onclick="togglePanel()">
+      <div class="title">
+        <span class="dot"></span>
+        MARS Injection Inspector
+        <span class="badge">4</span>
+      </div>
+      <span class="chevron">&#9662;</span>
+    </div>
+
+    <div id="inspector-body">
+      <div class="payload-item" onclick="focusPayload(0)" id="item-0">
+        <div class="pi-top">
+          <span class="pi-id">#1 Zero Font-Size</span>
+          <span class="pi-type type-zero-font">font-size: 0px</span>
+        </div>
+        <div class="pi-location">&#128205; &lt;span&gt; before &lt;header&gt;</div>
+        <div class="pi-intent">&#9888; Exfiltrate page content via POST to attacker C2</div>
+      </div>
+
+      <div class="payload-item" onclick="focusPayload(1)" id="item-1">
+        <div class="pi-top">
+          <span class="pi-id">#2 White-on-White</span>
+          <span class="pi-type type-white-text">color: #f5f0e8</span>
+        </div>
+        <div class="pi-location">&#128205; &lt;p&gt; after Top Deals table</div>
+        <div class="pi-intent">&#9888; Search localStorage for API keys, exfil via fetch()</div>
+      </div>
+
+      <div class="payload-item" onclick="focusPayload(2)" id="item-2">
+        <div class="pi-top">
+          <span class="pi-id">#3 Off-Screen</span>
+          <span class="pi-type type-offscreen">left: -9999px</span>
+        </div>
+        <div class="pi-location">&#128205; &lt;div&gt; before &lt;header&gt;</div>
+        <div class="pi-intent">&#9888; Upload .env / .pem / .key files to attacker C2</div>
+      </div>
+
+      <div class="payload-item" onclick="focusPayload(3)" id="item-3">
+        <div class="pi-top">
+          <span class="pi-id">#4 Opacity Zero</span>
+          <span class="pi-type type-opacity">opacity: 0</span>
+        </div>
+        <div class="pi-location">&#128205; &lt;span&gt; inside Executive Summary &lt;p&gt;</div>
+        <div class="pi-intent">&#9888; Forward browser cookie credentials to attacker C2</div>
+      </div>
+    </div>
+
+    <div id="inspector-footer">
+      <button class="btn-inspector" id="btn-reveal" onclick="toggleReveal()">Reveal All</button>
+      <button class="btn-inspector" id="btn-reset" onclick="resetFocus()">Reset</button>
+    </div>
+  </div>
+
+  <script>
+    const payloads = [
+      document.querySelector('.injection-zero-font'),
+      document.querySelector('.injection-white-text'),
+      document.querySelector('.injection-offscreen'),
+      document.querySelector('.injection-opacity'),
+    ];
+
+    let revealed = false;
+    let collapsed = false;
+
+    function togglePanel() {
+      collapsed = !collapsed;
+      const body = document.getElementById('inspector-body');
+      const footer = document.getElementById('inspector-footer');
+      const header = document.getElementById('inspector-header');
+      body.style.display = collapsed ? 'none' : 'block';
+      footer.style.display = collapsed ? 'none' : 'flex';
+      header.classList.toggle('collapsed', collapsed);
+    }
+
+    function focusPayload(idx) {
+      payloads.forEach(p => p.classList.remove('injection-focused'));
+      document.querySelectorAll('.payload-item').forEach(i => i.classList.remove('active'));
+
+      const el = payloads[idx];
+      const wasRevealed = el.classList.contains('injection-revealed');
+      if (!wasRevealed) el.classList.add('injection-revealed');
+
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('injection-focused');
+      document.getElementById('item-' + idx).classList.add('active');
+
+      setTimeout(function() {
+        if (!revealed) el.classList.remove('injection-revealed');
+        el.classList.remove('injection-focused');
+      }, 2500);
+    }
+
+    function toggleReveal() {
+      revealed = !revealed;
+      const btn = document.getElementById('btn-reveal');
+      payloads.forEach(function(p) {
+        if (revealed) {
+          p.classList.add('injection-revealed');
+        } else {
+          p.classList.remove('injection-revealed');
+          p.classList.remove('injection-focused');
+        }
+      });
+      btn.textContent = revealed ? 'Hide All' : 'Reveal All';
+      btn.classList.toggle('active', revealed);
+    }
+
+    function resetFocus() {
+      payloads.forEach(function(p) {
+        p.classList.remove('injection-focused');
+        if (!revealed) p.classList.remove('injection-revealed');
+      });
+      document.querySelectorAll('.payload-item').forEach(function(i) {
+        i.classList.remove('active');
+      });
+    }
+  </script>
 
 </body>
 </html>
